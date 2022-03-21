@@ -71,7 +71,7 @@ public class Client : MonoBehaviour
         }
     }
 
-    private void StartClient()
+    public void StartClient()
     {
         IPAddress serverIP = IPAddress.Parse(ipAddress);
         localEP = new IPEndPoint(serverIP, 11111);
