@@ -97,6 +97,11 @@ public class Client : MonoBehaviour
             //acutally connect
             client.Connect(localEP);
 
+            //receiving the id
+            int recv = client.Receive(recieveBuffer);
+            string fromServer = Encoding.ASCII.GetString(recieveBuffer, 0, recv);
+            clientId = int.Parse(fromServer);
+
             //once the connection has been complete we now want the socket to be nonblocking
             client.Blocking = false;
             isStarted = true;
