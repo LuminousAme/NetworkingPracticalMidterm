@@ -20,11 +20,22 @@ public class Client : MonoBehaviour
 
     private byte[] sendBuffer = new byte[512];
     private byte[] recieveBuffer = new byte[512];
+    private int clientId; //asigned by the server
 
     private float timeBetweenConnectionChecks = 1f, elapsedTime = 0f;
 
     public static Action onConnect;
     public static Action onDisconnect;
+
+    /*
+     * Comm Codes
+     * Seperate using $
+     * Messages starting with 0 are commands to the server
+     * Messages starting with 1 are things the server should be forwarding to other clients
+     * Next part of the message should be the clientId so they can be identified cleanly
+     * Following that the type of information being communicated
+     * Finally the acutal content of that data
+     */
 
     // Start is called before the first frame update
     void Start()
@@ -130,6 +141,12 @@ public class Client : MonoBehaviour
 
     public void Disconnect()
     {
+        if(IsConnected(client))
+        {
+            string toSend = "0$" + clientId.ToString() + "$quit";
+            sendBuffer = Encoding.ASCII.GetBytes(toSend);
+            client.Send(sendBuffer);
+        }
         client.Shutdown(SocketShutdown.Both);
         client.Close();
         isStarted = false;
@@ -138,9 +155,8 @@ public class Client : MonoBehaviour
 
     public void SendMessageToOtherPlayers(string msg)
     {
-        string toSend =  "msg$" + msg; //will probably want to modify this to include an id of some kind
+        string toSend =  "1$" + clientId.ToString() + "$msg$" + msg; //will probably want to modify this to include an id of some kind
         sendBuffer = Encoding.ASCII.GetBytes(toSend);
-
         client.Send(sendBuffer);
     }
 
