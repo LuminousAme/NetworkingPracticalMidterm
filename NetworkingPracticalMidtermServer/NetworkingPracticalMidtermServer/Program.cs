@@ -77,7 +77,7 @@ namespace NetworkingPracticalMidtermServer
                             sender.Shutdown(SocketShutdown.Both);
                             sender.Close();
                             //send a message to the reciever's chat telling them the sender has voluntarily disconnected
-                            sendBuffer = Encoding.ASCII.GetBytes("1$2$The other client has voluntarily disconnected");
+                            sendBuffer = Encoding.ASCII.GetBytes("1$2$msg$The other client has voluntarily disconnected");
                             reciever.Send(sendBuffer);
                         }
                     }
@@ -214,14 +214,32 @@ namespace NetworkingPracticalMidtermServer
                     IPEndPoint temp = (IPEndPoint)newConnection.RemoteEndPoint;
                     Console.WriteLine("Connected: " + temp.Address.ToString());
 
-                    sendBuffer = Encoding.ASCII.GetBytes(thisClient.ToString()); //either 0 or 1
+                    sendBuffer = Encoding.ASCII.GetBytes("Hello Welcome to the server your id is in the next split$" + thisClient.ToString()); //either 0 or 1
+                    Console.WriteLine("Before TCP Send");
                     newConnection.Send(sendBuffer);
+                    Console.WriteLine("After TCP Send");
 
+
+                    UDPServer.Blocking = true;
+                    Console.WriteLine("Before UDP Recieve");
                     int rec = UDPServer.ReceiveFrom(recieveBuffer, ref remoteClient);
-                    if (thisClient == 0) client0EP = remoteClient;
-                    else client1EP = remoteClient;
-                    sendBuffer = Encoding.ASCII.GetBytes("Thank you!");
+                    Console.WriteLine("Recieved from client {0}: {1}", thisClient, Encoding.ASCII.GetString(recieveBuffer, 0, rec));
+
+                    if (thisClient == 0)
+                    {
+                        client0EP = remoteClient;
+                        Console.WriteLine("UDP transfer with client 0 setup");
+                    }
+                    else
+                    {
+                        client1EP = remoteClient;
+                        Console.WriteLine("UDP transfer with client 1 setup");
+                    }
+                    /*
+                    sendBuffer = Encoding.ASCII.GetBytes("Thank you for joining!");
                     UDPServer.SendTo(sendBuffer, remoteClient);
+                    Console.WriteLine("Aftter UDP Send");
+                    */
                     UDPServer.Blocking = false;
                 }
                 catch (SocketException e)
