@@ -32,6 +32,8 @@ public class Client : MonoBehaviour
     public static Action onConnect;
     public static Action onDisconnect;
 
+    bool SendUdpPackets = false;
+
     /*
      * Comm Codes
      * Seperate using $
@@ -86,6 +88,9 @@ public class Client : MonoBehaviour
 
                     //send the message to the chat, there should be a function in a chat manager to handle this
                 }
+
+                if (data == "Hey this is some data to continually send via tcp so that it doesn't go offline") SendUdpPackets = false;
+                else if (data == "GoAheadAndPlay!") SendUdpPackets = true;
             }
             catch (SocketException e)
             {
@@ -102,7 +107,7 @@ public class Client : MonoBehaviour
                     string data = Encoding.ASCII.GetString(recieveBuffer, 0, recv);
                     string[] splitData = data.Split('$');
 
-                    Debug.Log("Recieved UDP update!");
+                    Debug.Log("ID: " + splitData[0]);
 
                     if (splitData[1] == "0")
                     {
@@ -119,7 +124,7 @@ public class Client : MonoBehaviour
 
                             Vector3 newPos = new Vector3(floatarr[0], floatarr[1], floatarr[2]);
 
-                            cube targetCube = FindObjectsOfType<cube>().ToList().Find(c => c.GetCubeId() == clientId);
+                            cube targetCube = FindObjectsOfType<cube>().ToList().Find(c => c.GetCubeId() == int.Parse(splitData[0]));
                             if (targetCube != null) targetCube.SetPosition(newPos);
                         }
                     }
@@ -142,6 +147,8 @@ public class Client : MonoBehaviour
         //it needs to be blocking when first connecting or it might not connect properly, once the connection is established it will be made non-blocking
         TcpClient.Blocking = true;
 
+        SendUdpPackets = false;
+
         //attempt a connection
         try
         {
@@ -155,6 +162,7 @@ public class Client : MonoBehaviour
             string fromServer = Encoding.ASCII.GetString(recieveBuffer, 0, recv);
             string[] splitData = fromServer.Split('$');
             clientId = int.Parse(splitData[1]);
+            Debug.Log(clientId);
 
             //once the connection has been complete we now want the socket to be nonblocking
             TcpClient.Blocking = false;
@@ -252,7 +260,7 @@ public class Client : MonoBehaviour
         Array.Copy(temp2, temp3, temp2.Length);
         Array.Copy(temp, 0, temp3, temp2.Length, temp.Length);
         sendBuffer = temp3;
-        UdpClient.SendTo(sendBuffer, UdpRemoteEP);
+        if(SendUdpPackets) UdpClient.SendTo(sendBuffer, UdpRemoteEP);
     }
 
     //make sure there is a disconnect if the player exits the game

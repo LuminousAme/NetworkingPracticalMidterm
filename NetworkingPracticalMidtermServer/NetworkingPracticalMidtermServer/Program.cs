@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Diagnostics;
 
 namespace NetworkingPracticalMidtermServer
 {
@@ -74,8 +75,6 @@ namespace NetworkingPracticalMidtermServer
                         }
                         else
                         {
-                            sender.Shutdown(SocketShutdown.Both);
-                            sender.Close();
                             //send a message to the reciever's chat telling them the sender has voluntarily disconnected
                             sendBuffer = Encoding.ASCII.GetBytes("1$2$msg$The other client has voluntarily disconnected");
                             reciever.Send(sendBuffer);
@@ -85,6 +84,10 @@ namespace NetworkingPracticalMidtermServer
                 catch (SocketException e)
                 {
                     if (e.SocketErrorCode != SocketError.WouldBlock) Console.WriteLine(e.ToString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
                 }
             }
         }
@@ -110,7 +113,7 @@ namespace NetworkingPracticalMidtermServer
                             UDPServer.SendTo(forwardBuffer, client1EP);
                         }
                         //if client 1 sent the message, forward it to client 0
-                        else
+                        else if (splitData[0] == "1")
                         {
                             UDPServer.SendTo(forwardBuffer, client0EP);
                         }
@@ -119,6 +122,10 @@ namespace NetworkingPracticalMidtermServer
                 catch (SocketException e)
                 {
                     if (e.SocketErrorCode != SocketError.WouldBlock) Console.WriteLine(e.ToString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
                 }
             }
         }
@@ -167,6 +174,10 @@ namespace NetworkingPracticalMidtermServer
             {
                 if (e.SocketErrorCode != SocketError.WouldBlock) Console.WriteLine(e.ToString());
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
 
             //setup udp server
             try
@@ -185,8 +196,16 @@ namespace NetworkingPracticalMidtermServer
             {
                 if (e.SocketErrorCode != SocketError.WouldBlock) Console.WriteLine(e.ToString());
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
 
-            while(true)
+            //start a stopwatch
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            while (true)
             {
                 Thread.Sleep(50);
 
@@ -245,6 +264,45 @@ namespace NetworkingPracticalMidtermServer
                 catch (SocketException e)
                 {
                     if (e.SocketErrorCode != SocketError.WouldBlock) Console.WriteLine(e.ToString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+
+
+                //tcp update sent to all clients every 1000 milliseconds
+                if (stopwatch.ElapsedMilliseconds >= 1000)
+                {
+                    stopwatch.Restart();
+                    if(client0 != null && client1 != null)
+                    {
+                        try
+                        {
+                            string toSend = "";
+                            if (!IsConnected(client0) || !IsConnected(client1)) toSend = "Hey this is some data to continually send via tcp so that it doesn't go offline";
+                            else toSend = "GoAheadAndPlay!";
+
+
+                            sendBuffer = Encoding.ASCII.GetBytes(toSend);
+                            if (client0 != null && IsConnected(client0))
+                            {
+                                client0.Send(sendBuffer);
+                            }
+                            if (client1 != null && IsConnected(client1))
+                            {
+                                client1.Send(sendBuffer);
+                            }
+                        }
+                        catch (SocketException e)
+                        {
+                            if (e.SocketErrorCode != SocketError.WouldBlock) Console.WriteLine(e.ToString());
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+                        }
+                    }
                 }
 
                 CheckForTcpForwarding(client0, client1);

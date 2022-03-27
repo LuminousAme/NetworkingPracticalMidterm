@@ -25,7 +25,7 @@ public class cube : MonoBehaviour
                 0, Input.GetAxis("Vertical") * Time.deltaTime * 2f);
         }
 
-        if(Client.instance != null)
+        if(Client.instance != null && Client.instance.GetClientId() == cubeId)
         {
             elapsedTime += Time.deltaTime;
             if(elapsedTime >= timeBetweenSends)
@@ -39,5 +39,6 @@ public class cube : MonoBehaviour
     public void SetPosition(Vector3 pos)
     {
         transform.position = pos;
+        Debug.Log("Pos Recieved: " + pos);
     }
 }
