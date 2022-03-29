@@ -87,6 +87,8 @@ public class Client : MonoBehaviour
                     string msg = splitData[3];
 
                     //send the message to the chat, there should be a function in a chat manager to handle this
+                    ChatManager chat = FindObjectOfType<ChatManager>();
+                    if (chat != null) chat.AddMessageToChat(sender, msg);
                 }
 
                 if (data == "Hey this is some data to continually send via tcp so that it doesn't go offline") SendUdpPackets = false;
